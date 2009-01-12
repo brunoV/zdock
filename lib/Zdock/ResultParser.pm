@@ -28,7 +28,7 @@ our $VERSION = '0.01';
 
 =head1 ATTRIBUTES
 
-=head2 scorefile
+=head2 zdock_result_file
 
 The name of the file that contains the zdock run information. This file
 should have three fields separated by tabs. The fields are: decoy name,
@@ -36,25 +36,32 @@ decoy RMSD, and zdock score.
 
 =cut
 
-has scorefile => (
+has zdock_result_file => (
    is => 'rw',
    isa => 'Str',
+   required => 1,
 );
 
-=head1 METHODS 
+has zdock_results => (
+   is => 'ro',
+   isa => 'HashRef',
+   lazy => 1,
+   builder => '_parse_zdock_result_file',
+);
 
-=head2 parse_zdock_scores
+=head2 zdock_results
 
-Takes a zdock result file as argument, returns a hashref keyed by decoy
-name. This hash allows to access each decoys's run information quickly:
+returns a hashref keyed by decoy name.
+This hash allows to access each decoys's run information easily:
 
-$scores->{'complex.23.pdb'}->{rmsd}
-$scores->{'complex.23.pdb'}->{zscore}
+my $scores = $parser->zdock_results;
 
+$scores->{'complex.23.pdb'}->{rmsd}; 
+$scores->{'complex.23.pdb'}->{zscore};
 
 =cut
 
-sub parse_zdock_scores {
+sub _parse_zdock_result_file {
 
    # Takes a zdock result file as argument,
    # returns a hash keyed by decoy name.
@@ -65,7 +72,7 @@ sub parse_zdock_scores {
       }
    );
    $zdock_parser->field_map(qw(file rmsd zscore));
-   my @data = $zdock_parser->read_file($self->scorefile);
+   my @data = $zdock_parser->read_file($self->zdock_result_file);
    my %data = map { $_->{file}, { rmsd => $_->{rmsd}, zscore => $_->{zscore} } } @data;
    return \%data;
 }
