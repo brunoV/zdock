@@ -3,7 +3,10 @@ MANIFEST
 Makefile.PL
 README
 lib/Zdock.pm
+lib/Zdock/Attributes.pm
 lib/Zdock/ResultParser.pm
 t/00-load.t
+t/ResultParser.t
+t/Attributes.t
 t/pod-coverage.t
 t/pod.t
