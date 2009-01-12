@@ -14,7 +14,6 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
    package MyClass;
@@ -36,17 +35,16 @@ decoy RMSD, and zdock score.
 
 =cut
 
-has zdock_result_file => (
-   is => 'rw',
-   isa => 'Str',
-   required => 1,
+has delimiter => (
+   is      => 'rw',
+   isa     => 'Str',
+   default => "\t",
 );
 
-has zdock_results => (
-   is => 'ro',
-   isa => 'HashRef',
-   lazy => 1,
-   builder => '_parse_zdock_result_file',
+has zdock_result_file => (
+   is       => 'rw',
+   isa      => 'Str',
+   required => 1,
 );
 
 =head2 zdock_results
@@ -61,19 +59,28 @@ This hash allows to access each decoys's run information easily:
 
 =cut
 
+has zdock_results => (
+   is      => 'ro',
+   isa     => 'HashRef',
+   lazy    => 1,
+   builder => '_parse_zdock_result_file',
+);
+
 sub _parse_zdock_result_file {
 
    # Takes a zdock result file as argument,
    # returns a hash keyed by decoy name.
-   my $self = shift;
+   my $self         = shift;
    my $zdock_parser = Text::CSV::Simple->new(
-      {  sep_char         => "\t",
+      {  sep_char         => $self->delimiter,
          allow_whitespace => 1,
       }
    );
    $zdock_parser->field_map(qw(file rmsd zscore));
-   my @data = $zdock_parser->read_file($self->zdock_result_file);
-   my %data = map { $_->{file}, { rmsd => $_->{rmsd}, zscore => $_->{zscore} } } @data;
+   my @data = $zdock_parser->read_file( $self->zdock_result_file );
+   my %data
+       = map { $_->{file}, { rmsd => $_->{rmsd}, zscore => $_->{zscore} } }
+       @data;
    return \%data;
 }
 
