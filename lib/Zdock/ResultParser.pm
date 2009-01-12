@@ -1,7 +1,6 @@
 package Zdock::ResultParser;
 use Moose::Role;
 use Text::CSV::Simple;
-use MooseX::Types::Path::Class qw(File);
 
 =head1 NAME
 
@@ -39,7 +38,7 @@ decoy RMSD, and zdock score.
 
 has scorefile => (
    is => 'rw',
-   isa => 'Str',
+   isa => 'File',
 );
 
 =head1 METHODS 
