@@ -54,10 +54,10 @@ has zdock_results => (
 returns a hashref keyed by decoy name.
 This hash allows to access each decoys's run information easily:
 
-my $scores = $parser->zdock_results;
+   my $scores = $parser->zdock_results;
 
-$scores->{'complex.23.pdb'}->{rmsd}; 
-$scores->{'complex.23.pdb'}->{zscore};
+   $scores->{'complex.23.pdb'}->{rmsd}; 
+   $scores->{'complex.23.pdb'}->{zscore};
 
 =cut
 
