@@ -18,13 +18,13 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-package MyClass;
-use Moose;
-with 'Zdock::ResultParser';
+   package MyClass;
+   use Moose;
+   with 'Zdock::ResultParser';
 
-package main;
-my $parser = MyClass->new( scorefile => '/some/file' )
-my %zdocking_scores = $parser->parse_zdock_scores;
+   package main;
+   my $parser = MyClass->new( scorefile => '/some/file' )
+   my %zdocking_scores = $parser->parse_zdock_scores;
 
 
 =head1 ATTRIBUTES
