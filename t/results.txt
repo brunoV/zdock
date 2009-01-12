@@ -1,0 +1,10 @@
+complex.1.pdb	  0.000	2059.773
+complex.2.pdb	  1.675	1895.647
+complex.3.pdb	  1.819	1874.971
+complex.4.pdb	  1.217	1784.502
+complex.5.pdb	  1.107	1737.828
+complex.6.pdb	  4.341	1690.923
+complex.7.pdb	  1.604	1673.966
+complex.8.pdb	 42.885	1670.867
+complex.9.pdb	  1.535	1630.427
+complex.10.pdb	  1.133	1612.258
