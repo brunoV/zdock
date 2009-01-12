@@ -38,7 +38,7 @@ decoy RMSD, and zdock score.
 
 has scorefile => (
    is => 'rw',
-   isa => 'File',
+   isa => 'Str',
 );
 
 =head1 METHODS 
