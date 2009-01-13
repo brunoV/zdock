@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-use lib qw(/home/bruno/lib/Zdock/lib);
 use Zdock::Clusterer;
 
 my @dirs = qw(

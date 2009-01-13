@@ -5,6 +5,8 @@ README
 lib/Zdock.pm
 lib/Zdock/Attributes.pm
 lib/Zdock/ResultParser.pm
+lib/Zdock/Cluster/ZdockStats.pm
+lib/Zdock/Clusterer.pm
 t/00-load.t
 t/ResultParser.t
 t/Attributes.t

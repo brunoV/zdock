@@ -3,6 +3,7 @@ use Moose;
 use Carp qw(croak);
 use File::Basename;
 use Chemistry::MacroMol::MiniPDB;
+use Statistics::Descriptive;
 extends 'Chemistry::Clusterer';
 with 'Zdock::ResultParser';
 
@@ -43,6 +44,20 @@ sub _load_pdbs {
       $self->add_structures($pdb);
    }
 }
+
+after 'calculate' => sub {
+   my $self = shift;
+
+   # I made Clusters pluggable so that they can have zdock-y
+   # attributes after being blessed. Neat-oh!
+   foreach my $cluster ( $self->clusters ) {
+
+      # We tell the plugin loader where to look for the plugin.
+      $cluster->_plugin_app_ns( ['Zdock'] );    # (Zdock/)
+      $cluster->_plugin_ns('Cluster');        # (Zdock/Cluster)
+      $cluster->load_plugin('ZdockStats');    # (Zdock/Cluster/ZdockStats)
+   }
+};
 
 no Moose;
 1;
