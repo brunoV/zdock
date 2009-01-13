@@ -21,8 +21,8 @@ our $VERSION = '0.01';
    with 'Zdock::ResultParser';
 
    package main;
-   my $parser = MyClass->new( scorefile => '/some/file' )
-   my %zdocking_scores = $parser->parse_zdock_scores;
+   my $parser = MyClass->new( zdock_result_file => '/some/file' )
+   my $zdocking_scores = $parser->zdock_results;
 
 
 =head1 ATTRIBUTES
