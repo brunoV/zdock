@@ -2,43 +2,31 @@
 use strict;
 use warnings;
 
-use File::Basename;
-use Chemistry::MacroMol::MiniPDB;
-use Chemistry::Clusterer;
-use Data::Dumper;
+use lib qw(/home/bruno/lib/Zdock/lib);
+use Zdock::Clusterer;
 
-my $dir = '/home/bruno/fab/r1x/zdocking-runs/run1/decoys/top1000/';
-my $result_file   = 'resultado.txt';
-my $decoy_file    = "*.pdb";
-my @cluster_range = ( 1 .. 2 );
-my $step          = 1;
-my $chain_regex   = 'H|L';
+my @dirs = qw(
+    /home/bruno/fab/r1x/zdocking-runs/run1/decoys/top1000/
+    /home/bruno/fab/m1r/zdocking-runs/run1/decoys/top1000/);
+my $result_file = 'resultado.txt';
+my @range       = ( 5 .. 8 );
+my $step        = 3;
 
-my $clusterer = Chemistry::Clusterer->new_with_traits(
-   traits            => [qw(Zdock::ResultParser)],
-   zdock_result_file => $dir . $result_file,
-);
+foreach my $model (@dirs) {
 
-my @pdbfiles = glob( $dir . $decoy_file );
-my $results  = $clusterer->zdock_results;
+   print $model, "\n"; 
+   
+   my $clusterer = Zdock::Clusterer->new(
+      dir               => $model,
+      zdock_result_file => $model . $result_file,
+      decoy_files       => "complex.??.pdb",
+      chain             => 'H|L',
+   );
 
-foreach my $file (@pdbfiles) {
-   my $pdb = Chemistry::MacroMol::MiniPDB->new_with_traits(
-      traits => [qw(Zdock::Attributes)] );
-   $pdb->file($file);
-   $pdb->chain($chain_regex);
-   $pdb->zscore( $results->{ basename($file) }->{zscore} );
-   $pdb->rmsd( $results->{ basename($file) }->{rmsd} );
-   $clusterer->add_structures($pdb);
-
-}
-
-for my $i (@cluster_range) {
-   warn $i, "\n";
-   my $clus_num = $step * $i;
-   $clusterer->grouping_method( { number => $clus_num } );
-   $clusterer->calculate;
-   printf( "%d %d %.2f\n",
-      $clus_num, $clusterer->cluster_count,
-      $clusterer->error );
+   for ( my $i = $range[0]; $i <= $range[-1]; $i += $step ) {
+      $clusterer->grouping_method( { number => $i } );
+      $clusterer->calculate;
+      printf( "%d %d %.2f\n",
+         $i, $clusterer->cluster_count, $clusterer->error );
+   }
 }
