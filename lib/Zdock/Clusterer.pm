@@ -3,9 +3,8 @@ use Moose;
 use Carp qw(croak);
 use File::Basename;
 use Chemistry::MacroMol::MiniPDB;
-use Statistics::Descriptive;
 extends 'Chemistry::Clusterer';
-with 'Zdock::ResultParser';
+with 'Zdock::ResultParser', 'MooseX::Traits';
 
 has dir => (
    is       => 'rw',

@@ -13,9 +13,10 @@ my $step        = 3;
 
 foreach my $model (@dirs) {
 
-   print $model, "\n"; 
-   
-   my $clusterer = Zdock::Clusterer->new(
+   print $model, "\n";
+
+   my $clusterer = Zdock::Clusterer->new_with_traits(
+      traits            => [qw(Zdock::Clusterer::StatsReport)],
       dir               => $model,
       zdock_result_file => $model . $result_file,
       decoy_files       => "complex.??.pdb",
@@ -27,5 +28,9 @@ foreach my $model (@dirs) {
       $clusterer->calculate;
       printf( "%d %d %.2f\n",
          $i, $clusterer->cluster_count, $clusterer->error );
+      print "Zdock stats:\n";
    }
+   $clusterer->print_stats_report(
+      description => "This is a test",
+   );
 }
