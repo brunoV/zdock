@@ -2,15 +2,25 @@ package Zdock::Clusterer;
 use Moose;
 use Carp qw(croak);
 use File::Basename;
-use Chemistry::MacroMol::MiniPDB;
+use lib qw(/home/bruno/lib/Zdock/lib);
+use lib qw(/home/bruno/lib/PerlMol/lib);
+use Zdock::MiniPDB;
 extends 'Chemistry::Clusterer';
-with 'Zdock::ResultParser', 'MooseX::Traits';
+my @roles = qw(
+   Zdock::ResultParser
+   Zdock::Clusterer::StatsReport 
+   MooseX::Traits);
+with @roles;
 
 has dir => (
-   is       => 'rw',
+   is       => 'ro',
    isa      => 'Str',
    required => 1,
-   trigger  => sub { (shift)->_load_pdbs() },
+   trigger  => sub {
+      $_[0]->_load_pdbs() unless $_[0]->structure_count > 0;
+   },
+   # This prevents reloading the structs when retrieving the object
+   # from a file.
 );
 
 has decoy_files => (
@@ -34,8 +44,7 @@ sub _load_pdbs {
        unless @pdbfiles;
 
    foreach my $file (@pdbfiles) {
-      my $pdb = Chemistry::MacroMol::MiniPDB->new_with_traits(
-         traits => [qw(Zdock::Attributes)] );
+      my $pdb = Zdock::MiniPDB->new();
       $pdb->file($file);
       $pdb->chain( $self->chain );
       $pdb->zscore( $results->{ basename($file) }->{zscore} );
@@ -43,6 +52,7 @@ sub _load_pdbs {
       $self->add_structures($pdb);
    }
 }
+
 
 after 'calculate' => sub {
    my $self = shift;
@@ -56,6 +66,10 @@ after 'calculate' => sub {
       $cluster->_plugin_ns('Cluster');        # (Zdock/Cluster)
       $cluster->load_plugin('ZdockStats');    # (Zdock/Cluster/ZdockStats)
    }
+};
+#
+before 'store' => sub {
+   map { bless $_, 'Chemistry::Cluster' } (shift)->clusters;
 };
 
 no Moose;

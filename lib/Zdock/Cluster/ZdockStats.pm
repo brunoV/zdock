@@ -1,6 +1,8 @@
 package Zdock::Cluster::ZdockStats;
 use Moose::Role;
 use Statistics::Descriptive;
+use MooseX::Storage;
+with Storage( 'format' => 'Storable', 'io' => 'File' );
 
 has 'zscore' => (
    is => 'rw',

@@ -89,7 +89,7 @@ sub print_stats_report {
 
    # Get our formatted report:
    my @report;
-   if ( $args{'format'} eq 'csv' ) {
+   if ( defined $args{'format'} && $args{'format'} eq 'csv' ) {
       @report = $rpt->report('csv');
       {
          local $, = "\n";
@@ -112,6 +112,15 @@ sub _get_cluster_stats_array {
    my @data;
    my $i = 1;
    foreach my $cluster ( $self->clusters ) {
+
+      # If the clusters haven't loaded the stats
+      # plugin, do it.
+      unless ($cluster->can('zscore')) {
+         $cluster->_plugin_app_ns( ['Zdock'] );
+         $cluster->_plugin_ns('Cluster');
+         $cluster->load_plugin('ZdockStats');
+      }
+
       push @data,
           [
          $i,                     $cluster->size,

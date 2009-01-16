@@ -2,6 +2,8 @@ package Zdock::Attributes;
 use strict;
 use warnings;
 use Moose::Role;
+use MooseX::Storage;
+with Storage( 'format' => 'Storable', 'io' => 'File' );
 
 =head1 NAME
 

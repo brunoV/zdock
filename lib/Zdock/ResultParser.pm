@@ -1,6 +1,8 @@
 package Zdock::ResultParser;
 use Moose::Role;
 use Text::CSV::Simple;
+use MooseX::Storage;
+with Storage( 'format' => 'Storable', 'io' => 'File' );
 
 =head1 NAME
 

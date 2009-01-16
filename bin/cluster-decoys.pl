@@ -1,36 +1,72 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-
+use lib qw(/home/bruno/lib/Zdock/lib);
+use lib qw(/home/bruno/lib/PerlMol/lib);
 use Zdock::Clusterer;
 
-my @dirs = qw(
-    /home/bruno/fab/r1x/zdocking-runs/run1/decoys/top1000/
-    /home/bruno/fab/m1r/zdocking-runs/run1/decoys/top1000/);
+my $base_dir    = '/home/bruno/fab/';
+my $decoy_dir   = '/zdocking-runs/run1/decoys/top1000/';
 my $result_file = 'resultado.txt';
-my @range       = ( 5 .. 8 );
-my $step        = 3;
+my @models      = ( 'r1x' );#, 'm1r' );
 
-foreach my $model (@dirs) {
+foreach my $model (@models) {
 
-   print $model, "\n";
-
-   my $clusterer = Zdock::Clusterer->new_with_traits(
-      traits            => [qw(Zdock::Clusterer::StatsReport)],
-      dir               => $model,
-      zdock_result_file => $model . $result_file,
-      decoy_files       => "complex.??.pdb",
+   my $clusterer = Zdock::Clusterer->new( #_with_traits(
+#      traits            => [qw(Zdock::Clusterer::StatsReport)],
+      dir               => $base_dir . $model . $decoy_dir,
+      zdock_result_file => $base_dir . $model . $decoy_dir . $result_file,
+      decoy_files       => "complex.?.pdb",
+      grouping_method   => { number => 2 },
       chain             => 'H|L',
    );
 
-   for ( my $i = $range[0]; $i <= $range[-1]; $i += $step ) {
-      $clusterer->grouping_method( { number => $i } );
-      $clusterer->calculate;
-      printf( "%d %d %.2f\n",
-         $i, $clusterer->cluster_count, $clusterer->error );
-      print "Zdock stats:\n";
-   }
-   $clusterer->print_stats_report(
-      description => "This is a test",
-   );
+   $clusterer->calculate;
+
+   $clusterer->store('cluster.dump');
 }
+
+
+my $other = Chemistry::Clusterer->load('cluster.dump');
+
+print $other->cluster_count, "\n";
+print $other->structure_count, "\n";
+# We know what's in butter rhum.
+
+
+# Ok, so it works with the basic Zdock::Clusterer subclassing:
+# no ResultParser, no MiniPDB with ZdockAttributes, no Clusters
+# with statistics.
+
+# It also works applying role 'Zdock::ResultParser' to Zdock::Clusterer.
+
+# It doesn't work when Z::Clusterer creates MiniPDB with traits to apply
+# the Z::Atribute role and then insert those objects into Z::Clusterer.
+
+# It is fixed though, by subclassing C::M::MiniPDB as Z::MiniPDB with
+# the role Z::Attributes;
+#
+# Now, it fails again when I try to load the plugin Z::C::ZdockStats
+# to every Cluster object.
+#
+# It is fixed if, before storing $clusterer, I bless every cluster
+# as Chemistry::Cluster.
+# After retrieving, the plugin is obviously not loaded, so if the
+# statistics of a cluster are still wanted, one should have to reload
+# it. What is a real PITA is the fact that one has to assign _plugin_app_ns
+# and _plugin_ns to ['Zdock'] and 'Cluster' respectively; otherwise
+# it will look the plugin under Chemistry/Cluster/Plugins instead of
+# Zdock/Cluster.
+#
+# It also works adding StatsReport, but it doesn's seem to remember
+# having the role applied after retrieving it from storage.
+# And if I consume the role when defining Z::Clusterer, it gives
+# an error when loading the object from storage saying that the 
+# cluster object doesn't have the "zscore" attribute. This of course
+# is true, since I haven't loaded the plugin yet. but I can't help it.
+# Now, I added an extra check to the role Z::Clusterer::ReportStats:
+# when its only allowed method it's called, it checks that it's clusters
+# have the plugin loaded. If they don't it loads them.
+# Now the only rough case that remains is if you want to access a
+# cluster's stats after retrieving the clusterer from storage. In this
+# case you'll have to reload the plugins first. It's solveable.
