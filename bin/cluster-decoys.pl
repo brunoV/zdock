@@ -7,32 +7,31 @@ use Zdock::Clusterer;
 
 my $base_dir    = '/home/bruno/fab/';
 my $decoy_dir   = '/zdocking-runs/run1/decoys/top1000/';
+my $cluster_dir = '/zdocking-runs/run1/clusters/';
 my $result_file = 'resultado.txt';
-my @models      = ( 'r1x' );#, 'm1r' );
+my $n_cluster   = 13;
+my @models      = ( 'm1r' ); #, 'm1r' );
 
 foreach my $model (@models) {
 
-   my $clusterer = Zdock::Clusterer->new( #_with_traits(
-#      traits            => [qw(Zdock::Clusterer::StatsReport)],
+   my $clusterer = Zdock::Clusterer->new(
       dir               => $base_dir . $model . $decoy_dir,
       zdock_result_file => $base_dir . $model . $decoy_dir . $result_file,
-      decoy_files       => "complex.?.pdb",
-      grouping_method   => { number => 2 },
+      decoy_files       => "complex.*.pdb",
+      grouping_method   => { number => $n_cluster },
       chain             => 'H|L',
    );
 
    $clusterer->calculate;
 
-   $clusterer->store('cluster.dump');
+   $clusterer->print_stats_report( file => $base_dir
+   . $model       . $cluster_dir . 'report-n'
+   . $n_cluster   . '.txt' );
+   $clusterer->store(
+      $base_dir . $model . $cluster_dir . 'n' . $n_cluster . '.dump' );
 }
 
-
-my $other = Chemistry::Clusterer->load('cluster.dump');
-
-print $other->cluster_count, "\n";
-print $other->structure_count, "\n";
 # We know what's in butter rhum.
-
 
 # Ok, so it works with the basic Zdock::Clusterer subclassing:
 # no ResultParser, no MiniPDB with ZdockAttributes, no Clusters
@@ -61,7 +60,7 @@ print $other->structure_count, "\n";
 # It also works adding StatsReport, but it doesn's seem to remember
 # having the role applied after retrieving it from storage.
 # And if I consume the role when defining Z::Clusterer, it gives
-# an error when loading the object from storage saying that the 
+# an error when loading the object from storage saying that the
 # cluster object doesn't have the "zscore" attribute. This of course
 # is true, since I haven't loaded the plugin yet. but I can't help it.
 # Now, I added an extra check to the role Z::Clusterer::ReportStats:
