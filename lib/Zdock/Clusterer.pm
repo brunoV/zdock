@@ -7,9 +7,9 @@ use lib qw(/home/bruno/lib/PerlMol/lib);
 use Zdock::MiniPDB;
 extends 'Chemistry::Clusterer';
 my @roles = qw(
-   Zdock::ResultParser
-   Zdock::Clusterer::StatsReport 
-   MooseX::Traits);
+    Zdock::ResultParser
+    Zdock::Clusterer::StatsReport
+    MooseX::Traits);
 with @roles;
 
 has dir => (
@@ -19,6 +19,7 @@ has dir => (
    trigger  => sub {
       $_[0]->_load_pdbs() unless $_[0]->structure_count > 0;
    },
+
    # This prevents reloading the structs when retrieving the object
    # from a file.
 );
@@ -53,12 +54,30 @@ sub _load_pdbs {
    }
 }
 
-
 after 'calculate' => sub {
+   my $self = shift;
+   $self->_load_ZdockStats_plugin;
+};
+
+before 'store' => sub {
+   map { bless $_, 'Chemistry::Cluster' } (shift)->clusters;
+};
+
+after 'store' => sub {
+
+   # After Storing, all the plugins go whoof!
+   # This is currently not working, as after storing, calling
+   # to ZdockStats' attributes throws an error.
+   my $self = shift;
+   $self->_load_ZdockStats_plugin;
+};
+
+sub _load_ZdockStats_plugin {
    my $self = shift;
 
    # I made Clusters pluggable so that they can have zdock-y
    # attributes after being blessed. Neat-oh!
+
    foreach my $cluster ( $self->clusters ) {
 
       # We tell the plugin loader where to look for the plugin.
@@ -66,11 +85,7 @@ after 'calculate' => sub {
       $cluster->_plugin_ns('Cluster');        # (Zdock/Cluster)
       $cluster->load_plugin('ZdockStats');    # (Zdock/Cluster/ZdockStats)
    }
-};
-#
-before 'store' => sub {
-   map { bless $_, 'Chemistry::Cluster' } (shift)->clusters;
-};
+}
 
 no Moose;
 1;
