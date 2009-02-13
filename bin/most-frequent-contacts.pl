@@ -29,23 +29,17 @@ my @clus_nums = ( '0', '1' );
 
 my $contacts;
 my $frequency_cutoff = 0.5;
+my $fab
+    = Chemistry::MacroMol->read( '/home/bruno/fab/' 
+       . $model
+       . '/zdocking-runs/run1/decoys/top1000/complex.1.pdb' );
+
+my ( $h, $l ) = $fab->chains( 'H', 'L' );
+my $ttg = Chemistry::MacroMol->read('/home/bruno/fab/ttg.pdb');
+my %fab = ( 'h' => $h, 'l' => $l );
+
 
 foreach my $model (@models) {
-
-   # Hay diferencias en la correlación número de residuo-identidad
-   # de residuo entre m1r y r1x. Por eso, para obtener la identidad
-   # del residuo a partir del número de secuencia, hay que utilizar
-   # el modelo correcto.
-   # Se supone que lo arreglé ya... por las dudas lo dejo acá.
-   my $fab
-       = Chemistry::MacroMol->read( '/home/bruno/fab/' 
-          . $model
-          . '/zdocking-runs/run1/decoys/top1000/complex.1.pdb' );
-
-   my ( $h, $l ) = $fab->chains( 'H', 'L' );
-   my $ttg = Chemistry::MacroMol->read('/home/bruno/fab/ttg.pdb');
-   my %fab = ( 'h' => $h, 'l' => $l );
-
    foreach my $clus_num (@clus_nums) {
       foreach my $chain ( 'l', 'h', ) {
          $contacts->{$clus_run}->{$clus_num}->{$model}->{$chain} = [];
@@ -65,8 +59,6 @@ foreach my $model (@models) {
          foreach my $contact (@ind) {
             my $freq
                 = $stats->{'mean'}->at( $contact->[0], $contact->[1] );
-            # frequencies are too low for r1x, so they don't get past the
-            # frequency cutoff filter.
             last if $freq < $frequency_cutoff;
 
             my $res_ttg = get_residue_name( $ttg, $contact->[0] );
