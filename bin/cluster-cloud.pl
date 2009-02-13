@@ -1,32 +1,42 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib qw(/home/bruno/lib/Zdock/lib);
-use lib qw(/home/bruno/lib/PerlMol/lib);
 use Zdock::Clusterer;
 use Chemistry::MacroMol;
 use Chemistry::File::PDB;
 use Chemistry::Domain;
 
 my $base_dir   = '/home/bruno/fab';
-my $model      = '/r1x';
+my @models     = ('/m1r' ); #, '/m1r');
 my $clus_dir   = '/zdocking-runs/run1/clusters';
-my $clus_file  = '/d10.dump';
-my $cloud_file = '/d10.pdb';
-my $infile     = $base_dir . $model . $clus_dir . $clus_file;
-my $outfile    = $base_dir . $model . $clus_dir . $cloud_file;
+my $clus_file  = '/n13.dump';
+my $cloud_file = '/n13.pdb';
 
-my $clusterer = Zdock::Clusterer->retrieve($infile);
-my $big_cloud = Chemistry::Mol->new;
+foreach my $model (@models) {
+   my $infile     = $base_dir . $model . $clus_dir . $clus_file;
+   my $outfile    = $base_dir . $model . $clus_dir . $cloud_file;
 
-my $Z = 1;
-foreach my $cluster ( $clusterer->clusters ) {
-   my $cloud = create_cloud_from_cluster( $cluster, $Z );
-   $big_cloud->combine($cloud);
-   ++$Z;
+   my $clusterer = Zdock::Clusterer->load($infile);
+   my $big_cloud = Chemistry::Mol->new;
+
+   # Load the Zscore statistics plugin for each cluster
+   foreach my $cluster ( $clusterer->clusters ) {
+      unless ( $cluster->can('zscore') ) {
+         $cluster->_plugin_app_ns( ['Zdock'] );
+         $cluster->_plugin_ns('Cluster');
+         $cluster->load_plugin('ZdockStats');
+      }
+   }
+
+   my $Z = 1;
+   foreach my $cluster ( $clusterer->clusters ) {
+      my $cloud = create_cloud_from_cluster( $cluster, $Z );
+      $big_cloud->combine($cloud);
+      ++$Z;
+   }
+
+   $big_cloud->write($outfile);
 }
-
-$big_cloud->write($outfile);
 
 sub create_cloud_from_cluster {
    my ( $cluster, $Z ) = @_;
